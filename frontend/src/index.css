@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1F4E79;
+  --color-action: #2E75B6;
+  --color-success: #375623;
+  --color-warning: #C55A11;
+  --color-danger: #C00000;
+  --color-surface: #FFFFFF;
+  --color-background: #F8FAFC;
+  --color-text-dark: #404040;
+  --color-text-muted: #888888;
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-dark);
+}

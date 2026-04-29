@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+python-multipart
+ultralytics
+opencv-python-headless
+azure-storage-blob
+python-dotenv
+aiofiles
+pillow
