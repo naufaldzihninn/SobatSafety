@@ -3,8 +3,8 @@ import cv2
 import uuid
 import json
 from ultralytics import YOLO
-from . import rule_engine
-from .. import database, models
+from services import rule_engine
+import database, models
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "../weights/best.pt")
 model = None
@@ -122,7 +122,7 @@ def stream_video_inference(video_path: str, filename: str, required_ppe: list, l
             # SISTEM ALERT CCTV (Setiap 5 detik jika ada pelanggaran)
             if evaluation["violation_count"] > 0 and (current_time_ms - last_alert_time_ms) > 5000:
                 try:
-                    from . import azure_storage
+                    from services import azure_storage
                     alert_id = str(uuid.uuid4())
                     img_name = f"alert_{alert_id[:8]}.jpg"
                     img_path = os.path.join(os.path.dirname(video_path), img_name)
@@ -162,7 +162,7 @@ def stream_video_inference(video_path: str, filename: str, required_ppe: list, l
     # Update log utama di akhir video (Ringkasan)
     if log_id and worst_evaluation:
         try:
-            from . import azure_storage
+            from services import azure_storage
             db = database.SessionLocal()
             main_log = db.query(models.DetectionLog).filter(models.DetectionLog.id == log_id).first()
             if main_log:

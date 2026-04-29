@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import models, database
-from .services import yolo_service, rule_engine, video_helper
+import models, database
+from services import yolo_service, rule_engine, video_helper
 
 # Bikin folder uploads jika belum ada
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
