@@ -22,3 +22,20 @@ body {
   background-color: var(--color-background);
   color: var(--color-text-dark);
 }
+
+/* Fullscreen: buat container mengisi seluruh layar */
+#video-stream-container:fullscreen,
+#video-stream-container:-webkit-full-screen,
+#video-stream-container:-moz-full-screen {
+  height: 100vh !important;
+  width: 100vw !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: #000 !important;
+}
+
+#video-stream-container:fullscreen .grid,
+#video-stream-container:-webkit-full-screen .grid,
+#video-stream-container:-moz-full-screen .grid {
+  height: 100% !important;
+}

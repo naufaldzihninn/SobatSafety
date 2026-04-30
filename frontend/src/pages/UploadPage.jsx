@@ -214,9 +214,13 @@ export default function UploadPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex-1 flex flex-col"
             >
-              <div id="video-stream-container" className="w-full bg-gray-900 rounded-xl mb-6 relative overflow-hidden border border-gray-700 group">
+              <div
+                id="video-stream-container"
+                className="w-full bg-gray-900 rounded-xl mb-6 relative overflow-hidden border border-gray-700 group"
+                style={{height: '280px'}}
+              >
                 {result.isVideo ? (
-                  <div className="grid grid-cols-2 gap-1 p-1" style={{height: '280px'}}>
+                  <div className="grid grid-cols-2 gap-1 p-1 h-full">
                     {/* Kiri: Video asli smooth */}
                     <div className="relative rounded-lg overflow-hidden bg-black">
                       <video
