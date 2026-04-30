@@ -225,7 +225,7 @@ export default function UploadPage() {
                     <div className="relative rounded-lg overflow-hidden bg-black">
                       <video
                         src={previewUrl}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         autoPlay
                         loop
                         muted
@@ -248,7 +248,7 @@ export default function UploadPage() {
                         ref={aiFrameRef}
                         src=""
                         alt="AI Detection Frame"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         style={{display: result.latestFrameUrl ? 'block' : 'none'}}
                       />
                       {!result.latestFrameUrl && (
