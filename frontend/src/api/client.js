@@ -34,6 +34,11 @@ export const deleteLog = async (logId) => {
   return response.data;
 };
 
+export const deleteAllLogs = async () => {
+  const response = await apiClient.delete('/logs');
+  return response.data;
+};
+
 export const detectPPE = async (file, areaId) => {
   const formData = new FormData();
   formData.append('file', file);

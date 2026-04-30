@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Download, Calendar, ArrowLeft, AlertTriangle, CheckCircle2, RefreshCw, ExternalLink, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getAllLogs, getFileUrl, deleteLog } from '../api/client';
+import { getAllLogs, getFileUrl, deleteLog, deleteAllLogs } from '../api/client';
 import clsx from 'clsx';
 
 export default function LogsPage() {
@@ -32,6 +32,21 @@ export default function LogsPage() {
     } catch (error) {
       console.error('Failed to delete log:', error);
       alert('Gagal menghapus riwayat.');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm('PERINGATAN: Apakah Anda yakin ingin menghapus SELURUH riwayat deteksi? Tindakan ini tidak dapat dibatalkan.')) return;
+    
+    try {
+      setLoading(true);
+      await deleteAllLogs();
+      setLogs([]);
+    } catch (error) {
+      console.error('Failed to delete all logs:', error);
+      alert('Gagal menghapus seluruh riwayat.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,12 +106,24 @@ export default function LogsPage() {
           <h2 className="text-3xl font-bold text-primary">Riwayat Deteksi</h2>
           <p className="text-text-muted">Daftar lengkap seluruh aktivitas monitoring APD.</p>
         </div>
-        <button 
-          onClick={fetchLogs}
-          className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all shadow-sm"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Refresh Data
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleDeleteAll}
+            disabled={logs.length === 0 || loading}
+            className={clsx(
+              "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-sm",
+              logs.length === 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-red-50 border border-red-100 text-red-600 hover:bg-red-100"
+            )}
+          >
+            <Trash2 size={16} /> Hapus Semua
+          </button>
+          <button 
+            onClick={fetchLogs}
+            className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-all shadow-sm"
+          >
+            <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> Refresh Data
+          </button>
+        </div>
       </div>
 
       {/* Filters & Search */}

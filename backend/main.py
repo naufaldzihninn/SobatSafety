@@ -247,6 +247,15 @@ def delete_log(log_id: str, db: Session = Depends(database.get_db)):
     db.commit()
     return {"message": "Log deleted successfully"}
 
+@app.delete("/api/v1/logs")
+def delete_all_logs(db: Session = Depends(database.get_db)):
+    # Hapus semua pelanggaran
+    db.query(models.Violation).delete()
+    # Hapus semua log
+    db.query(models.DetectionLog).delete()
+    db.commit()
+    return {"message": "All logs deleted successfully"}
+
 @app.get("/api/v1/dashboard/stats")
 def get_dashboard_stats(db: Session = Depends(database.get_db)):
     # Statistik sederhana untuk hari ini
