@@ -208,17 +208,28 @@ export default function UploadPage() {
               className="flex-1 flex flex-col"
             >
               <div id="video-stream-container" className="w-full h-48 bg-gray-100 rounded-xl mb-6 relative overflow-hidden border border-gray-200 group flex items-center justify-center">
-                 <img src={result.isVideo ? getFileUrl(result.streamUrl) : (getFileUrl(result.imageUrl) || previewUrl)} alt="Annotated Result" className="max-w-full max-h-full object-contain" />
-                 
-                 {result.isVideo && (
-                    <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse flex items-center gap-1">
-                      <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
-                    </div>
-                 )}
-                 
-                 <button onClick={toggleFullscreen} className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                    <Maximize size={16} />
-                 </button>
+                {result.isVideo ? (
+                  // Putar video dari file lokal browser = smooth 100%
+                  <video
+                    src={previewUrl}
+                    className="max-w-full max-h-full object-contain"
+                    autoPlay
+                    loop
+                    muted
+                  />
+                ) : (
+                  <img src={getFileUrl(result.imageUrl) || previewUrl} alt="Annotated Result" className="max-w-full max-h-full object-contain" />
+                )}
+
+                {result.isVideo && (
+                   <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse flex items-center gap-1">
+                     <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
+                   </div>
+                )}
+
+                <button onClick={toggleFullscreen} className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                   <Maximize size={16} />
+                </button>
               </div>
 
               {/* Status Summary */}
