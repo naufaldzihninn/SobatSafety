@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { UploadCloud, Image as ImageIcon, MapPin, Loader2, CheckCircle, AlertOctagon, ShieldCheck, Maximize } from 'lucide-react';
 import clsx from 'clsx';
@@ -12,6 +12,7 @@ export default function UploadPage() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState(null);
+  const aiFrameRef = useRef(null); // Ref untuk update src gambar tanpa re-render
 
   useEffect(() => {
     getAreas().then(setAreas).catch(console.error);
@@ -32,6 +33,11 @@ export default function UploadPage() {
               details: stats.details || [],
               latestFrameUrl: stats.latestFrameUrl || prev?.latestFrameUrl
             }));
+            // Update src gambar AI secara langsung via DOM (tanpa re-render = tanpa blink)
+            if (stats.latestFrameUrl && aiFrameRef.current) {
+              const baseUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+              aiFrameRef.current.src = `${baseUrl}${stats.latestFrameUrl}?t=${Date.now()}`;
+            }
           }
         } catch (e) {
           console.error('Error fetching stats:', e);
@@ -224,20 +230,24 @@ export default function UploadPage() {
                         <span className="w-1.5 h-1.5 bg-white rounded-full"></span> LIVE
                       </div>
                     </div>
-                    {/* Frame teranotasi terbaru dari AI */}
-                    {result.latestFrameUrl && (
-                      <div className="relative">
-                        <img
-                          key={result.latestFrameUrl + Date.now()}
-                          src={getFileUrl(result.latestFrameUrl) + '?t=' + Date.now()}
-                          alt="AI Detection Frame"
-                          className="w-full rounded-lg object-contain max-h-40"
-                        />
-                        <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                          🤖 AI Detection
+                    {/* Frame teranotasi terbaru dari AI - pakai ref agar tidak blink */}
+                    <div className="relative" style={{height: '10rem'}}>
+                      <img
+                        ref={aiFrameRef}
+                        src=""
+                        alt="AI Detection Frame"
+                        className="w-full h-full rounded-lg object-contain bg-gray-200"
+                        style={{display: result.latestFrameUrl ? 'block' : 'none'}}
+                      />
+                      {!result.latestFrameUrl && (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                          <span>⏳ Menunggu frame AI...</span>
                         </div>
+                      )}
+                      <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                        🤖 AI Detection
                       </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <img src={getFileUrl(result.imageUrl) || previewUrl} alt="Annotated Result" className="w-full h-full max-h-48 object-contain" />
