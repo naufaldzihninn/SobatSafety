@@ -5,6 +5,8 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 # Mencegah Python melakukan buffering pada stdout dan stderr
 ENV PYTHONUNBUFFERED=1
+# Set timezone ke WIB (Asia/Jakarta)
+ENV TZ=Asia/Jakarta
 
 # Install system dependencies untuk OpenCV dan YOLO
 RUN apt-get update && apt-get install -y \

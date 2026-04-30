@@ -140,7 +140,7 @@ async def detect_ppe(
     evaluation = rule_engine.evaluate_compliance(result["predictions"], required_ppe)
     
     # Simpan ke Database
-    from .services import azure_storage
+    from services import azure_storage
     log_id = str(uuid.uuid4())
     
     # Upload ke Azure
