@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import threading
 from fastapi import FastAPI, File, UploadFile, Depends, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -105,8 +106,6 @@ async def detect_ppe(
     # Cek apakah file adalah video
     video_extensions = [".mp4", ".mov", ".avi", ".webm", ".mkv"]
     if file_ext.lower() in video_extensions:
-        # Jika video, kita akan mengembalikan stream URL
-        # Kita buat log dummy untuk video ini di database
         log_id = str(uuid.uuid4())
         log_entry = models.DetectionLog(
             id=log_id,
@@ -120,7 +119,20 @@ async def detect_ppe(
         )
         db.add(log_entry)
         db.commit()
-        
+
+        # Ambil required_ppe untuk background thread
+        required_ppe = json.loads(area.required_ppe) if area.required_ppe else ["helmet", "vest"]
+
+        # Proses video di background thread (tidak blocking)
+        def run_background():
+            gen = yolo_service.stream_video_inference(file_path, filename, required_ppe, log_id)
+            # Konsumsi semua frame agar YOLO memproses sampai selesai
+            for _ in gen:
+                pass
+
+        thread = threading.Thread(target=run_background, daemon=True)
+        thread.start()
+
         return {
             "isVideo": True,
             "filename": filename,

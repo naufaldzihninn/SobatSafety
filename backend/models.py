@@ -1,6 +1,11 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.sql import func
+from datetime import datetime
+import pytz
 from database import Base
+
+def get_jakarta_time():
+    return datetime.now(pytz.timezone('Asia/Jakarta'))
 
 class Area(Base):
     __tablename__ = "areas"
@@ -9,7 +14,7 @@ class Area(Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     required_ppe = Column(Text, nullable=True) # JSON array as string
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=get_jakarta_time)
 
 class DetectionLog(Base):
     __tablename__ = "detection_logs"
@@ -22,7 +27,7 @@ class DetectionLog(Base):
     violation_count = Column(Integer, default=0)
     violation_details = Column(Text, nullable=True) # JSON details
     confidence_score = Column(Float, default=0.0)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=get_jakarta_time)
 
 class Violation(Base):
     __tablename__ = "violations"
@@ -31,7 +36,7 @@ class Violation(Base):
     detection_log_id = Column(String, ForeignKey("detection_logs.id"))
     missing_ppe = Column(String, nullable=True)
     is_acknowledged = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=get_jakarta_time)
 
 class User(Base):
     __tablename__ = "users"
@@ -41,4 +46,4 @@ class User(Base):
     password_hash = Column(String)
     name = Column(String)
     role = Column(String, default="supervisor") # admin, supervisor
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), default=get_jakarta_time)

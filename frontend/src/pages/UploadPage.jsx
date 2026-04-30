@@ -29,7 +29,8 @@ export default function UploadPage() {
               status: stats.status,
               compliantCount: stats.compliantCount,
               violationCount: stats.violationCount,
-              details: stats.details || []
+              details: stats.details || [],
+              latestFrameUrl: stats.latestFrameUrl || prev?.latestFrameUrl
             }));
           }
         } catch (e) {
@@ -207,24 +208,39 @@ export default function UploadPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex-1 flex flex-col"
             >
-              <div id="video-stream-container" className="w-full h-48 bg-gray-100 rounded-xl mb-6 relative overflow-hidden border border-gray-200 group flex items-center justify-center">
+              <div id="video-stream-container" className="w-full bg-gray-100 rounded-xl mb-6 relative overflow-hidden border border-gray-200 group" style={{minHeight: '12rem'}}>
                 {result.isVideo ? (
-                  // Putar video dari file lokal browser = smooth 100%
-                  <video
-                    src={previewUrl}
-                    className="max-w-full max-h-full object-contain"
-                    autoPlay
-                    loop
-                    muted
-                  />
+                  <div className="flex flex-col gap-2 p-2">
+                    {/* Video asli dari file lokal - smooth 100% */}
+                    <div className="relative">
+                      <video
+                        src={previewUrl}
+                        className="w-full rounded-lg object-contain max-h-40"
+                        autoPlay
+                        loop
+                        muted
+                      />
+                      <div className="absolute top-1 left-1 bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full"></span> LIVE
+                      </div>
+                    </div>
+                    {/* Frame teranotasi terbaru dari AI */}
+                    {result.latestFrameUrl && (
+                      <div className="relative">
+                        <img
+                          key={result.latestFrameUrl + Date.now()}
+                          src={getFileUrl(result.latestFrameUrl) + '?t=' + Date.now()}
+                          alt="AI Detection Frame"
+                          className="w-full rounded-lg object-contain max-h-40"
+                        />
+                        <div className="absolute top-1 left-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                          🤖 AI Detection
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <img src={getFileUrl(result.imageUrl) || previewUrl} alt="Annotated Result" className="max-w-full max-h-full object-contain" />
-                )}
-
-                {result.isVideo && (
-                   <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse flex items-center gap-1">
-                     <span className="w-2 h-2 bg-white rounded-full"></span> LIVE
-                   </div>
+                  <img src={getFileUrl(result.imageUrl) || previewUrl} alt="Annotated Result" className="w-full h-full max-h-48 object-contain" />
                 )}
 
                 <button onClick={toggleFullscreen} className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors opacity-0 group-hover:opacity-100">

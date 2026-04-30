@@ -67,7 +67,8 @@ def stream_video_inference(video_path: str, filename: str, required_ppe: list, l
         "status": "MENGANALISIS...",
         "compliantCount": 0,
         "violationCount": 0,
-        "details": []
+        "details": [],
+        "latestFrameUrl": None
     }
     
     # Variabel Tracking
@@ -75,44 +76,68 @@ def stream_video_inference(video_path: str, filename: str, required_ppe: list, l
     max_violations = 0
     worst_evaluation = None
     worst_frame = None
-    
+    frame_count = 0
+    FRAME_SKIP = 5   # Proses 1 dari setiap 5 frame (hemat CPU 5x lipat)
+    SCALE = 0.5      # Kecilkan resolusi 50% sebelum inference
+    last_annotated_frame = None  # Cache frame terakhir untuk frame yang dilewati
+
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         return
-        
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
-            
+
         current_time_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
-        
+        frame_count += 1
+
+        # Lewati frame (kirim frame terakhir yang sudah dianotasi agar stream tetap mulus)
+        if frame_count % FRAME_SKIP != 0:
+            display_frame = last_annotated_frame if last_annotated_frame is not None else frame
+            _, buffer = cv2.imencode('.jpg', display_frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+            continue
+
         if model is not None:
-            results = model(frame, verbose=False)
+            # Kecilkan frame sebelum inference untuk hemat CPU
+            small_frame = cv2.resize(frame, (0, 0), fx=SCALE, fy=SCALE)
+            results = model(small_frame, verbose=False)
             result = results[0]
-            annotated_frame = result.plot()
-            
+
+            # Skala balik anotasi ke ukuran asli
+            annotated_small = result.plot()
+            annotated_frame = cv2.resize(annotated_small, (frame.shape[1], frame.shape[0]))
+            last_annotated_frame = annotated_frame
+
+            # Simpan frame terbaru ke file agar bisa di-fetch frontend
+            latest_frame_path = os.path.join(os.path.dirname(video_path), f"latest_{filename}.jpg")
+            cv2.imwrite(latest_frame_path, annotated_frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+
             predictions = []
             for box in result.boxes:
                 class_id = int(box.cls[0])
                 class_name = result.names[class_id]
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                x1, y1, x2, y2 = [v / SCALE for v in box.xyxy[0].tolist()]
                 predictions.append({
                     "class": class_name.lower(),
                     "confidence": float(box.conf[0]),
                     "bbox": [x1, y1, x2, y2]
                 })
-                
+
             evaluation = rule_engine.evaluate_compliance(predictions, required_ppe)
-            
+
             # Update stats UI
             video_stats[filename] = {
                 "status": "COMPLIANT" if evaluation["violation_count"] == 0 else "VIOLATION",
                 "compliantCount": evaluation["compliant_count"],
                 "violationCount": evaluation["violation_count"],
-                "details": evaluation["violation_details"]
+                "details": evaluation["violation_details"],
+                "latestFrameUrl": f"/uploads/latest_{filename}.jpg"
             }
-            
+
             # Tracking "Terparah" untuk ringkasan akhir
             if evaluation["violation_count"] >= max_violations:
                 max_violations = evaluation["violation_count"]
@@ -127,11 +152,10 @@ def stream_video_inference(video_path: str, filename: str, required_ppe: list, l
                     img_name = f"alert_{alert_id[:8]}.jpg"
                     img_path = os.path.join(os.path.dirname(video_path), img_name)
                     cv2.imwrite(img_path, annotated_frame)
-                    
-                    # Upload ke Azure
+
                     azure_url = azure_storage.upload_image_to_azure(img_path)
                     final_path = azure_url if azure_url else f"/uploads/{img_name}"
-                    
+
                     db = database.SessionLocal()
                     new_alert = models.DetectionLog(
                         id=alert_id,
@@ -152,8 +176,9 @@ def stream_video_inference(video_path: str, filename: str, required_ppe: list, l
                     print(f"⚠️ Alert fail: {e}")
         else:
             annotated_frame = frame
-            
-        _, buffer = cv2.imencode('.jpg', annotated_frame)
+            last_annotated_frame = frame
+
+        _, buffer = cv2.imencode('.jpg', annotated_frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
                

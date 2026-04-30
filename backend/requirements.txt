@@ -8,3 +8,4 @@ azure-storage-blob
 python-dotenv
 aiofiles
 pillow
+pytz
